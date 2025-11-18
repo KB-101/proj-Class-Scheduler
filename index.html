@@ -47,20 +47,13 @@ if ('serviceWorker' in navigator) {
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
-            padding: 12px 20px;
+            justify-content: space-between;
+            gap: 15px;
         }
         
         body.dark-mode .time-panel {
             background: #2c3e50;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        
-        .top-bar {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
         }
         
         .current-time {
@@ -98,15 +91,15 @@ if ('serviceWorker' in navigator) {
         
         .controls {
             display: flex;
-            align-items: center;
             gap: 10px;
+            align-items: center;
         }
         
-        .edit-toggle {
+        .edit-toggle, .import-btn, .export-btn {
             background: #2ecc71;
             color: white;
             border: none;
-            border-radius: 20px;
+            border-radius: 10px;
             padding: 8px 16px;
             font-size: 0.9rem;
             cursor: pointer;
@@ -124,6 +117,14 @@ if ('serviceWorker' in navigator) {
         
         .edit-toggle.off {
             background: #95a5a6;
+        }
+        
+        .import-btn {
+            background: #3498db;
+        }
+        
+        .export-btn {
+            background: #3498db;
         }
         
         .dark-mode-toggle {
@@ -300,26 +301,6 @@ if ('serviceWorker' in navigator) {
             border: 1px solid #3d566e;
         }
         
-        .class-item:hover {
-            background: #e9ecef;
-        }
-        
-        body.dark-mode .class-item:hover {
-            background: #3d566e;
-        }
-        
-        .class-item.read-only {
-            cursor: default;
-        }
-        
-        .class-item.read-only:hover {
-            background: #f8f9fa;
-        }
-        
-        body.dark-mode .class-item.read-only:hover {
-            background: #34495e;
-        }
-        
         .class-time {
             font-size: 0.7rem;
             color: #7f8c8d;
@@ -385,26 +366,6 @@ if ('serviceWorker' in navigator) {
         body.dark-mode .upcoming-item {
             background: #34495e;
             border: 1px solid #3d566e;
-        }
-        
-        .upcoming-item:hover {
-            background: #e9ecef;
-        }
-        
-        body.dark-mode .upcoming-item:hover {
-            background: #3d566e;
-        }
-        
-        .upcoming-item.read-only {
-            cursor: default;
-        }
-        
-        .upcoming-item.read-only:hover {
-            background: #f8f9fa;
-        }
-        
-        body.dark-mode .upcoming-item.read-only:hover {
-            background: #34495e;
         }
         
         .upcoming-item.test {
@@ -745,15 +706,15 @@ if ('serviceWorker' in navigator) {
 <body>
     <div class="container">
         <div class="time-panel">
-            <div class="top-bar">
-                <div class="current-time" id="currentDateTime">
-                    <div class="date">Loading...</div>
-                    <div class="time">Loading...</div>
-                </div>
-                <div class="controls">
-                    <button id="editToggle" class="edit-toggle">Edit Mode</button>
-                    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
-                </div>
+            <div class="current-time" id="currentDateTime">
+                <div class="date">Loading...</div>
+                <div class="time">Loading...</div>
+            </div>
+            <div class="controls">
+                <button id="importBtn" class="import-btn">Import</button>
+                <button id="exportBtn" class="export-btn">Export</button>
+                <button id="editToggle" class="edit-toggle">Edit Mode</button>
+                <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
             </div>
         </div>
         
@@ -763,24 +724,22 @@ if ('serviceWorker' in navigator) {
                     <h2 class="card-title">Weekly Schedule</h2>
                     <button id="addClassBtn" class="add-btn">+</button>
                 </div>
-                <div class="card-content">
-                    <div class="schedule-grid" id="scheduleGrid">
-                        <!-- Schedule will be populated by JavaScript -->
-                    </div>
+                
+                <div class="schedule-grid" id="scheduleGrid">
+                    <!-- Schedule will be populated by JavaScript -->
                 </div>
             </div>
             
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Upcoming Events</h2>
+                    <h2 class="card-title">Events</h2>
                     <button id="addEventBtn" class="add-btn">+</button>
                 </div>
-                <div class="card-content">
-                    <div class="upcoming-container" id="upcoming-events">
-                        <div class="empty-state">
-                            <i>📅</i>
-                            <p>No upcoming events. Add some events to get started!</p>
-                        </div>
+                
+                <div class="upcoming-container" id="upcoming-events">
+                    <div class="empty-state">
+                        <i>📅</i>
+                        <p>No upcoming events. Add some events to get started!</p>
                     </div>
                 </div>
             </div>
@@ -883,6 +842,9 @@ if ('serviceWorker' in navigator) {
         const currentDateTime = document.getElementById('currentDateTime');
         const editToggle = document.getElementById('editToggle');
         const darkModeToggle = document.getElementById('darkModeToggle');
+        const importBtn = document.getElementById('importBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const fileInput = document.getElementById('fileInput');
 
         // Days of the week
         const days = [
@@ -955,13 +917,11 @@ if ('serviceWorker' in navigator) {
                 // Enable all interactive elements
                 const classItems = document.querySelectorAll('.class-item');
                 classItems.forEach(item => {
-                    item.classList.remove('read-only');
                     item.style.cursor = 'pointer';
                 });
                 
                 const upcomingItems = document.querySelectorAll('.upcoming-item');
                 upcomingItems.forEach(item => {
-                    item.classList.remove('read-only');
                     item.style.cursor = 'pointer';
                 });
             } else {
@@ -973,13 +933,11 @@ if ('serviceWorker' in navigator) {
                 // Disable all interactive elements
                 const classItems = document.querySelectorAll('.class-item');
                 classItems.forEach(item => {
-                    item.classList.add('read-only');
                     item.style.cursor = 'default';
                 });
                 
                 const upcomingItems = document.querySelectorAll('.upcoming-item');
                 upcomingItems.forEach(item => {
-                    item.classList.add('read-only');
                     item.style.cursor = 'default';
                 });
             }
@@ -1176,7 +1134,7 @@ if ('serviceWorker' in navigator) {
                 if (classesForDay.length > 0) {
                     classesForDay.forEach(cls => {
                         const classElement = document.createElement('div');
-                        classElement.className = `class-item ${isEditMode ? '' : 'read-only'} ${isDarkMode ? 'dark' : ''}`;
+                        classElement.className = `class-item ${isDarkMode ? 'dark' : ''}`;
                         classElement.innerHTML = `
                             <div class="class-time">${cls.time}</div>
                             <div class="class-name">${cls.title}</div>
@@ -1228,7 +1186,7 @@ if ('serviceWorker' in navigator) {
                 if (classesForDay.length > 0) {
                     classesForDay.forEach(cls => {
                         const classElement = document.createElement('div');
-                        classElement.className = `class-item ${isEditMode ? '' : 'read-only'} ${isDarkMode ? 'dark' : ''}`;
+                        classElement.className = `class-item ${isDarkMode ? 'dark' : ''}`;
                         classElement.innerHTML = `
                             <div class="class-time">${cls.time}</div>
                             <div class="class-name">${cls.title}</div>
@@ -1272,7 +1230,7 @@ if ('serviceWorker' in navigator) {
                 upcomingEventsContainer.innerHTML = '';
                 scheduleData.events.forEach(event => {
                     const eventElement = document.createElement('div');
-                    eventElement.className = `upcoming-item ${event.type} ${isEditMode ? '' : 'read-only'} ${isDarkMode ? 'dark' : ''}`;
+                    eventElement.className = `upcoming-item ${event.type} ${isDarkMode ? 'dark' : ''}`;
                     eventElement.innerHTML = `
                         <div class="item-title">${event.title}</div>
                         <div class="item-course">${event.type.charAt(0).toUpperCase() + event.type.slice(1)}</div>
@@ -1304,6 +1262,43 @@ if ('serviceWorker' in navigator) {
         function formatDate(dateString) {
             const options = { year: 'numeric', month: 'short', day: 'numeric' };
             return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        // Export data as JSON
+        function exportData() {
+            const dataStr = JSON.stringify(scheduleData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `class-schedule-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Import data from file
+        function importData(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // Validate the imported data structure
+                    if (importedData && Array.isArray(importedData.classes) && Array.isArray(importedData.events)) {
+                        scheduleData = importedData;
+                        localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+                        renderSchedule();
+                        alert('Data imported successfully!');
+                    } else {
+                        alert('Invalid backup file format.');
+                    }
+                } catch (error) {
+                    alert('Error reading backup file. Please make sure it is a valid JSON file.');
+                }
+            };
+            reader.readAsText(file);
         }
 
         // Event Listeners
@@ -1341,6 +1336,21 @@ if ('serviceWorker' in navigator) {
             saveItem();
         });
 
+        // Import/Export event listeners
+        importBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                if (e.target.files.length > 0) {
+                    importData(e.target.files[0]);
+                }
+            };
+            input.click();
+        });
+
+        exportBtn.addEventListener('click', exportData);
+
         // Close modal when clicking outside
         window.addEventListener('click', (e) => {
             if (e.target === formModal) {
@@ -1358,7 +1368,7 @@ if ('serviceWorker' in navigator) {
         setInterval(updateDateTime, 1000);
         updateDateTime();
 
-        // Initialize UI with saved states
+        // Initialize
         updateDarkModeUI();
         updateEditModeUI();
         renderSchedule();
