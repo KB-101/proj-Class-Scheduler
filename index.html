@@ -14,13 +14,13 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-    <style>
+        <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
         
         body {
@@ -95,7 +95,7 @@ if ('serviceWorker' in navigator) {
             align-items: center;
         }
         
-        .edit-toggle, .import-btn, .export-btn {
+        .edit-toggle, .import-btn, .export-btn, .notification-settings-btn {
             background: #2ecc71;
             color: white;
             border: none;
@@ -110,9 +110,11 @@ if ('serviceWorker' in navigator) {
             width: 120px;
             justify-content: center;
             height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        }
+        
+        .edit-toggle:hover, .import-btn:hover, .export-btn:hover, .notification-settings-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         
         .edit-toggle.off {
@@ -125,6 +127,12 @@ if ('serviceWorker' in navigator) {
         
         .export-btn {
             background: #3498db;
+        }
+        
+        .notification-settings-btn {
+            background: #9b59b6;
+            width: auto;
+            padding: 8px 12px;
         }
         
         .dark-mode-toggle {
@@ -143,8 +151,103 @@ if ('serviceWorker' in navigator) {
             transition: all 0.3s ease;
         }
         
+        .dark-mode-toggle:hover {
+            transform: rotate(15deg) scale(1.1);
+        }
+        
         body.dark-mode .dark-mode-toggle {
             background: #2c3e50;
+        }
+        
+        /* Hamburger Menu */
+        .hamburger-menu {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 21px;
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .hamburger-menu span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #2c3e50;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-mode .hamburger-menu span {
+            background-color: #ecf0f1;
+        }
+        
+        .hamburger-menu.active span:nth-child(1) {
+            transform: translateY(9px) rotate(45deg);
+        }
+        
+        .hamburger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger-menu.active span:nth-child(3) {
+            transform: translateY(-9px) rotate(-45deg);
+        }
+        
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            padding: 80px 20px 20px;
+            z-index: 99;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        body.dark-mode .mobile-menu {
+            background: #2c3e50;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+        }
+        
+        .mobile-menu.active {
+            right: 0;
+        }
+        
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 98;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .mobile-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .mobile-controls .edit-toggle, 
+        .mobile-controls .import-btn, 
+        .mobile-controls .export-btn, 
+        .mobile-controls .notification-settings-btn {
+            width: 100%;
+            justify-content: flex-start;
         }
         
         .dashboard {
@@ -168,9 +271,17 @@ if ('serviceWorker' in navigator) {
             position: relative;
         }
         
+        .card:hover {
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+        }
+        
         body.dark-mode .card {
             background: #2c3e50;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        body.dark-mode .card:hover {
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
         }
         
         .card-header {
@@ -232,7 +343,8 @@ if ('serviceWorker' in navigator) {
         
         .add-btn:hover {
             background: #27ae60;
-            transform: scale(1.1);
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
         }
         
         .add-btn.disabled {
@@ -243,13 +355,60 @@ if ('serviceWorker' in navigator) {
         .add-btn.disabled:hover {
             background: #bdc3c7;
             transform: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Schedule container with scrollbar */
+        .schedule-container {
+            height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        /* Custom scrollbar styling */
+        .schedule-container::-webkit-scrollbar,
+        .upcoming-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .schedule-container::-webkit-scrollbar-track,
+        .upcoming-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .schedule-container::-webkit-scrollbar-thumb,
+        .upcoming-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .schedule-container::-webkit-scrollbar-thumb:hover,
+        .upcoming-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        body.dark-mode .schedule-container::-webkit-scrollbar-track,
+        body.dark-mode .upcoming-container::-webkit-scrollbar-track {
+            background: #34495e;
+        }
+        
+        body.dark-mode .schedule-container::-webkit-scrollbar-thumb,
+        body.dark-mode .upcoming-container::-webkit-scrollbar-thumb {
+            background: #5a6b7e;
+        }
+        
+        body.dark-mode .schedule-container::-webkit-scrollbar-thumb:hover,
+        body.dark-mode .upcoming-container::-webkit-scrollbar-thumb:hover {
+            background: #6c7d91;
         }
         
         .schedule-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 5px;
-            margin-bottom: 15px;
         }
         
         @media (max-width: 768px) {
@@ -267,10 +426,56 @@ if ('serviceWorker' in navigator) {
             border-radius: 6px;
             font-weight: 600;
             font-size: 0.8rem;
+            transition: all 0.2s ease;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .day-header:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
         }
         
         body.dark-mode .day-header {
             background: #2980b9;
+        }
+        
+        body.dark-mode .day-header:hover {
+            background: #2471a3;
+        }
+        
+        /* Current day pulsing animation */
+        .day-header.current-day {
+            animation: pulse-day 2s infinite;
+            position: sticky;
+            top: 0;
+            z-index: 11; /* Higher z-index to stay above other days */
+        }
+        
+        @keyframes pulse-day {
+            0% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7), 0 2px 4px rgba(0,0,0,0.1);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(46, 204, 113, 0), 0 2px 4px rgba(0,0,0,0.1);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0), 0 2px 4px rgba(0,0,0,0.1);
+            }
+        }
+        
+        .day-header.current-day::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+            z-index: -1;
+            border-radius: 6px;
         }
         
         @media (max-width: 768px) {
@@ -294,11 +499,23 @@ if ('serviceWorker' in navigator) {
             overflow: hidden;
             cursor: pointer;
             border: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+        }
+        
+        .class-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #3498db;
         }
         
         body.dark-mode .class-item {
             background: #34495e;
             border: 1px solid #3d566e;
+        }
+        
+        body.dark-mode .class-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         
         .class-time {
@@ -342,16 +559,9 @@ if ('serviceWorker' in navigator) {
         }
         
         .upcoming-container {
-            height: 300px;
+            height: 400px;
             overflow-y: auto;
             padding-right: 5px;
-        }
-        
-        @media (min-width: 768px) {
-            .upcoming-container {
-                height: 400px;
-                padding-right: 10px;
-            }
         }
         
         .upcoming-item {
@@ -361,11 +571,21 @@ if ('serviceWorker' in navigator) {
             background: #f8f9fa;
             cursor: pointer;
             border: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+        }
+        
+        .upcoming-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         
         body.dark-mode .upcoming-item {
             background: #34495e;
             border: 1px solid #3d566e;
+        }
+        
+        body.dark-mode .upcoming-item:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         
         .upcoming-item.test {
@@ -426,6 +646,14 @@ if ('serviceWorker' in navigator) {
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .form-container.active .form-content {
+            transform: scale(1);
+            opacity: 1;
         }
         
         body.dark-mode .form-content {
@@ -462,6 +690,7 @@ if ('serviceWorker' in navigator) {
         
         .close-btn:hover {
             background: #7f8c8d;
+            transform: rotate(90deg);
         }
         
         body.dark-mode .close-btn {
@@ -483,6 +712,11 @@ if ('serviceWorker' in navigator) {
             display: inline-flex;
             align-items: center;
             justify-content: center;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         
         @media (min-width: 768px) {
@@ -552,6 +786,13 @@ if ('serviceWorker' in navigator) {
             font-size: 0.9rem;
             background: white;
             color: #2c3e50;
+            transition: all 0.2s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+            outline: none;
         }
         
         body.dark-mode .form-group input, 
@@ -560,6 +801,13 @@ if ('serviceWorker' in navigator) {
             background: #34495e;
             border: 1px solid #3d566e;
             color: #ecf0f1;
+        }
+        
+        body.dark-mode .form-group input:focus, 
+        body.dark-mode .form-group select:focus, 
+        body.dark-mode .form-group textarea:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
         }
         
         @media (min-width: 768px) {
@@ -633,10 +881,28 @@ if ('serviceWorker' in navigator) {
             font-weight: 600;
             margin-bottom: 8px;
             font-size: 0.9rem;
+            transition: all 0.2s ease;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .mobile-day-header:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .mobile-day-header.current-day {
+            animation: pulse-day 2s infinite;
+            z-index: 11;
         }
         
         body.dark-mode .mobile-day-header {
             background: #2980b9;
+        }
+        
+        body.dark-mode .mobile-day-header:hover {
+            background: #2471a3;
         }
         
         @media (max-width: 768px) {
@@ -646,6 +912,21 @@ if ('serviceWorker' in navigator) {
             
             .schedule-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            /* Hide some controls on mobile */
+            .desktop-controls {
+                display: none;
+            }
+            
+            .hamburger-menu {
+                display: flex;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .mobile-menu, .mobile-menu-overlay {
+                display: none !important;
             }
         }
         
@@ -670,6 +951,14 @@ if ('serviceWorker' in navigator) {
             max-width: 400px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             text-align: center;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .confirm-container.active .confirm-content {
+            transform: scale(1);
+            opacity: 1;
         }
         
         body.dark-mode .confirm-content {
@@ -701,6 +990,343 @@ if ('serviceWorker' in navigator) {
             justify-content: center;
             gap: 10px;
         }
+        
+        /* Notification styles */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1002;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+        
+        .notification {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .notification.hide {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        
+        body.dark-mode .notification {
+            background: #2c3e50;
+        }
+        
+        .notification-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        body.dark-mode .notification-title {
+            color: #ecf0f1;
+        }
+        
+        .notification-message {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        body.dark-mode .notification-message {
+            color: #bdc3c7;
+        }
+        
+        .notification-time {
+            font-size: 0.8rem;
+            color: #95a5a6;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            color: #95a5a6;
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .notification-close:hover {
+            color: #e74c3c;
+            transform: scale(1.1);
+        }
+        
+        .notification.class-reminder {
+            border-left: 4px solid #3498db;
+        }
+        
+        .notification.event-reminder {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .notification.deadline-reminder {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .notification-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #3498db;
+            width: 100%;
+            transform: scaleX(1);
+            transform-origin: left;
+            transition: transform 5s linear;
+        }
+        
+        .notification.class-reminder .notification-progress {
+            background: #3498db;
+        }
+        
+        .notification.event-reminder .notification-progress {
+            background: #2ecc71;
+        }
+        
+        .notification.deadline-reminder .notification-progress {
+            background: #e74c3c;
+        }
+        
+        /* Notification Settings Modal */
+        .settings-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1003;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .settings-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 95%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .settings-container.active .settings-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        body.dark-mode .settings-content {
+            background: #2c3e50;
+        }
+        
+        .settings-title {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        
+        body.dark-mode .settings-title {
+            color: #ecf0f1;
+        }
+        
+        .settings-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        body.dark-mode .settings-group {
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .settings-group-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        body.dark-mode .settings-group-title {
+            color: #ecf0f1;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .setting-label {
+            font-size: 0.95rem;
+            color: #2c3e50;
+        }
+        
+        body.dark-mode .setting-label {
+            color: #ecf0f1;
+        }
+        
+        .setting-description {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 3px;
+        }
+        
+        body.dark-mode .setting-description {
+            color: #bdc3c7;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #2ecc71;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .sound-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: white;
+            color: #2c3e50;
+        }
+        
+        body.dark-mode .sound-select {
+            background: #34495e;
+            border: 1px solid #3d566e;
+            color: #ecf0f1;
+        }
+        
+        .test-sound-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-sound-btn:hover {
+            background: #2980b9;
+        }
+        
+        .sound-preview-container {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+        
+        .audio-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background-color: #e74c3c;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -710,11 +1336,29 @@ if ('serviceWorker' in navigator) {
                 <div class="date">Loading...</div>
                 <div class="time">Loading...</div>
             </div>
-            <div class="controls">
+            <div class="controls desktop-controls">
                 <button id="importBtn" class="import-btn">Import</button>
                 <button id="exportBtn" class="export-btn">Export</button>
                 <button id="editToggle" class="edit-toggle">Edit Mode</button>
+                <button id="notificationSettingsBtn" class="notification-settings-btn">🔔</button>
                 <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
+            </div>
+            <div class="hamburger-menu" id="hamburgerMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-controls">
+                <button id="mobileEditToggle" class="edit-toggle">Edit Mode</button>
+                <button id="mobileImportBtn" class="import-btn">Import</button>
+                <button id="mobileExportBtn" class="export-btn">Export</button>
+                <button id="mobileNotificationSettingsBtn" class="notification-settings-btn">Notification Settings</button>
+                <button id="mobileDarkModeToggle" class="dark-mode-toggle">Toggle Dark Mode</button>
             </div>
         </div>
         
@@ -725,8 +1369,11 @@ if ('serviceWorker' in navigator) {
                     <button id="addClassBtn" class="add-btn">+</button>
                 </div>
                 
-                <div class="schedule-grid" id="scheduleGrid">
-                    <!-- Schedule will be populated by JavaScript -->
+                <!-- Schedule container with scrollbar -->
+                <div class="schedule-container">
+                    <div class="schedule-grid" id="scheduleGrid">
+                        <!-- Schedule will be populated by JavaScript -->
+                    </div>
                 </div>
             </div>
             
@@ -812,6 +1459,134 @@ if ('serviceWorker' in navigator) {
         </div>
     </div>
 
+    <!-- Notification Settings Modal -->
+    <div id="settingsModal" class="settings-container">
+        <div class="settings-content">
+            <button id="closeSettingsBtn" class="close-btn">×</button>
+            <h2 class="settings-title">Notification Settings</h2>
+            
+            <div class="settings-group">
+                <h3 class="settings-group-title">General Settings</h3>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">Enable Notifications</div>
+                        <div class="setting-description">Show visual notifications for reminders</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="enableNotifications" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">Enable Sound</div>
+                        <div class="setting-description">Play sound with notifications</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="enableSound" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <h3 class="settings-group-title">Sound Settings</h3>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">Notification Sound</div>
+                        <div class="setting-description">Choose the sound for notifications</div>
+                    </div>
+                </div>
+                
+                <div class="sound-preview-container">
+                    <select id="notificationSound" class="sound-select">
+                        <option value="chime">Chime</option>
+                        <option value="bell">Bell</option>
+                        <option value="alert">Alert</option>
+                        <option value="ding">Ding</option>
+                    </select>
+                    <button id="testSoundBtn" class="test-sound-btn">Test Sound</button>
+                </div>
+                
+                <div class="setting-item" style="margin-top: 15px;">
+                    <div>
+                        <div class="setting-label">Volume</div>
+                        <div class="setting-description">Adjust notification sound volume</div>
+                    </div>
+                    <input type="range" id="soundVolume" min="0" max="100" value="70" style="width: 120px;">
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <h3 class="settings-group-title">Class Reminders</h3>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">Enable Class Reminders</div>
+                        <div class="setting-description">Get reminded before classes start</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="enableClassReminders" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">Reminder Time</div>
+                        <div class="setting-description">How long before class to remind you</div>
+                    </div>
+                    <select id="classReminderTime" class="sound-select" style="width: 120px;">
+                        <option value="5">5 minutes</option>
+                        <option value="10">10 minutes</option>
+                        <option value="15" selected>15 minutes</option>
+                        <option value="30">30 minutes</option>
+                        <option value="60">1 hour</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <h3 class="settings-group-title">Event Reminders</h3>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">Enable Event Reminders</div>
+                        <div class="setting-description">Get reminded before events and deadlines</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="enableEventReminders" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">Reminder Time</div>
+                        <div class="setting-description">How long before events to remind you</div>
+                    </div>
+                    <select id="eventReminderTime" class="sound-select" style="width: 120px;">
+                        <option value="1">1 day before</option>
+                        <option value="2">2 days before</option>
+                        <option value="3" selected>3 days before</option>
+                        <option value="7">1 week before</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+                <button id="saveSettingsBtn" class="btn btn-success">Save Settings</button>
+                <button id="cancelSettingsBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
     <script>
         // Initialize data
         let scheduleData = JSON.parse(localStorage.getItem('scheduleData')) || {
@@ -824,10 +1599,23 @@ if ('serviceWorker' in navigator) {
         
         // Initialize dark mode state
         let isDarkMode = JSON.parse(localStorage.getItem('isDarkMode')) || false;
+        
+        // Initialize notification settings
+        let notificationSettings = JSON.parse(localStorage.getItem('notificationSettings')) || {
+            enableNotifications: true,
+            enableSound: true,
+            notificationSound: 'chime',
+            soundVolume: 70,
+            enableClassReminders: true,
+            classReminderTime: 15,
+            enableEventReminders: true,
+            eventReminderTime: 3
+        };
 
         // DOM Elements
         const formModal = document.getElementById('formModal');
         const confirmModal = document.getElementById('confirmModal');
+        const settingsModal = document.getElementById('settingsModal');
         const scheduleForm = document.getElementById('scheduleForm');
         const addClassBtn = document.getElementById('addClassBtn');
         const addEventBtn = document.getElementById('addEventBtn');
@@ -844,7 +1632,22 @@ if ('serviceWorker' in navigator) {
         const darkModeToggle = document.getElementById('darkModeToggle');
         const importBtn = document.getElementById('importBtn');
         const exportBtn = document.getElementById('exportBtn');
-        const fileInput = document.getElementById('fileInput');
+        const notificationSettingsBtn = document.getElementById('notificationSettingsBtn');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+        const notificationContainer = document.getElementById('notificationContainer');
+        const testSoundBtn = document.getElementById('testSoundBtn');
+        
+        // Mobile menu elements
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const mobileEditToggle = document.getElementById('mobileEditToggle');
+        const mobileImportBtn = document.getElementById('mobileImportBtn');
+        const mobileExportBtn = document.getElementById('mobileExportBtn');
+        const mobileNotificationSettingsBtn = document.getElementById('mobileNotificationSettingsBtn');
+        const mobileDarkModeToggle = document.getElementById('mobileDarkModeToggle');
 
         // Days of the week
         const days = [
@@ -856,6 +1659,75 @@ if ('serviceWorker' in navigator) {
             { id: 'saturday', name: 'Saturday' },
             { id: 'sunday', name: 'Sunday' }
         ];
+
+        // Audio context for generating sounds
+        let audioContext = null;
+
+        // Initialize audio context
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Generate notification sound using Web Audio API
+        function generateSound(type, volume = 0.5) {
+            initAudioContext();
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Set sound parameters based on type
+            switch(type) {
+                case 'chime':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+                    break;
+                case 'bell':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(784, audioContext.currentTime); // G5
+                    break;
+                case 'alert':
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+                    break;
+                case 'ding':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime); // High pitch
+                    break;
+                default:
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+            }
+            
+            // Set volume
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1);
+            
+            // Play the sound
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 1);
+        }
+
+        // Play notification sound
+        function playNotificationSound() {
+            if (!notificationSettings.enableSound) return;
+            
+            const volume = notificationSettings.soundVolume / 100;
+            generateSound(notificationSettings.notificationSound, volume);
+        }
+
+        // Get current day name
+        function getCurrentDay() {
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = new Date().getDay();
+            return days[today];
+        }
 
         // Update current date and time
         function updateDateTime() {
@@ -881,6 +1753,20 @@ if ('serviceWorker' in navigator) {
             `;
         }
 
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            hamburgerMenu.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            mobileMenuOverlay.classList.toggle('active');
+        }
+
+        // Close mobile menu
+        function closeMobileMenu() {
+            hamburgerMenu.classList.remove('active');
+            mobileMenu.classList.remove('active');
+            mobileMenuOverlay.classList.remove('active');
+        }
+
         // Toggle edit mode
         function toggleEditMode() {
             isEditMode = !isEditMode;
@@ -900,9 +1786,11 @@ if ('serviceWorker' in navigator) {
             if (isDarkMode) {
                 document.body.classList.add('dark-mode');
                 darkModeToggle.textContent = '☀️';
+                mobileDarkModeToggle.textContent = 'Toggle Light Mode';
             } else {
                 document.body.classList.remove('dark-mode');
                 darkModeToggle.textContent = '🌙';
+                mobileDarkModeToggle.textContent = 'Toggle Dark Mode';
             }
         }
 
@@ -911,6 +1799,8 @@ if ('serviceWorker' in navigator) {
             if (isEditMode) {
                 editToggle.classList.remove('off');
                 editToggle.textContent = 'Edit Mode';
+                mobileEditToggle.classList.remove('off');
+                mobileEditToggle.textContent = 'Edit Mode';
                 addClassBtn.style.display = 'flex';
                 addEventBtn.style.display = 'flex';
                 
@@ -927,6 +1817,8 @@ if ('serviceWorker' in navigator) {
             } else {
                 editToggle.classList.add('off');
                 editToggle.textContent = 'View Mode';
+                mobileEditToggle.classList.add('off');
+                mobileEditToggle.textContent = 'View Mode';
                 addClassBtn.style.display = 'none';
                 addEventBtn.style.display = 'none';
                 
@@ -984,11 +1876,17 @@ if ('serviceWorker' in navigator) {
             }
             
             formModal.style.display = 'flex';
+            setTimeout(() => {
+                formModal.classList.add('active');
+            }, 10);
         }
 
         // Hide form modal
         function hideModal() {
-            formModal.style.display = 'none';
+            formModal.classList.remove('active');
+            setTimeout(() => {
+                formModal.style.display = 'none';
+            }, 300);
         }
 
         // Show confirmation modal
@@ -997,6 +1895,9 @@ if ('serviceWorker' in navigator) {
             
             document.getElementById('confirmMessage').textContent = message;
             confirmModal.style.display = 'flex';
+            setTimeout(() => {
+                confirmModal.classList.add('active');
+            }, 10);
             
             // Remove previous event listeners
             confirmYesBtn.onclick = null;
@@ -1004,13 +1905,81 @@ if ('serviceWorker' in navigator) {
             // Add new event listener
             confirmYesBtn.onclick = function() {
                 onConfirm();
-                confirmModal.style.display = 'none';
+                confirmModal.classList.remove('active');
+                setTimeout(() => {
+                    confirmModal.style.display = 'none';
+                }, 300);
             };
         }
 
         // Hide confirmation modal
         function hideConfirmModal() {
-            confirmModal.style.display = 'none';
+            confirmModal.classList.remove('active');
+            setTimeout(() => {
+                confirmModal.style.display = 'none';
+            }, 300);
+        }
+
+        // Show settings modal
+        function showSettingsModal() {
+            // Load current settings into the form
+            document.getElementById('enableNotifications').checked = notificationSettings.enableNotifications;
+            document.getElementById('enableSound').checked = notificationSettings.enableSound;
+            document.getElementById('notificationSound').value = notificationSettings.notificationSound;
+            document.getElementById('soundVolume').value = notificationSettings.soundVolume;
+            document.getElementById('enableClassReminders').checked = notificationSettings.enableClassReminders;
+            document.getElementById('classReminderTime').value = notificationSettings.classReminderTime;
+            document.getElementById('enableEventReminders').checked = notificationSettings.enableEventReminders;
+            document.getElementById('eventReminderTime').value = notificationSettings.eventReminderTime;
+            
+            settingsModal.style.display = 'flex';
+            setTimeout(() => {
+                settingsModal.classList.add('active');
+            }, 10);
+        }
+
+        // Hide settings modal
+        function hideSettingsModal() {
+            settingsModal.classList.remove('active');
+            setTimeout(() => {
+                settingsModal.style.display = 'none';
+            }, 300);
+        }
+
+        // Save notification settings
+        function saveNotificationSettings() {
+            notificationSettings = {
+                enableNotifications: document.getElementById('enableNotifications').checked,
+                enableSound: document.getElementById('enableSound').checked,
+                notificationSound: document.getElementById('notificationSound').value,
+                soundVolume: parseInt(document.getElementById('soundVolume').value),
+                enableClassReminders: document.getElementById('enableClassReminders').checked,
+                classReminderTime: parseInt(document.getElementById('classReminderTime').value),
+                enableEventReminders: document.getElementById('enableEventReminders').checked,
+                eventReminderTime: parseInt(document.getElementById('eventReminderTime').value)
+            };
+            
+            localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+            hideSettingsModal();
+            
+            // Show confirmation
+            showNotification('Settings Saved', 'Your notification settings have been updated', 'event-reminder');
+        }
+
+        // Test notification sound
+        function testNotificationSound() {
+            playNotificationSound();
+            
+            // Show visual feedback
+            const testBtn = document.getElementById('testSoundBtn');
+            const originalText = testBtn.textContent;
+            testBtn.textContent = 'Playing...';
+            testBtn.disabled = true;
+            
+            setTimeout(() => {
+                testBtn.textContent = originalText;
+                testBtn.disabled = false;
+            }, 1000);
         }
 
         // Save item to data
@@ -1072,12 +2041,23 @@ if ('serviceWorker' in navigator) {
             // Update UI
             renderSchedule();
             hideModal();
+            
+            // Show notification for new items
+            if (!id) {
+                const notificationType = type === 'class' ? 'class-reminder' : 'event-reminder';
+                const message = type === 'class' 
+                    ? `Class "${title}" added to your schedule` 
+                    : `${type.charAt(0).toUpperCase() + type.slice(1)} "${title}" added to your events`;
+                
+                showNotification('Item Added', message, notificationType);
+            }
         }
 
         // Delete item
         function deleteItem() {
             const id = document.getElementById('editId').value;
             const type = document.getElementById('type').value;
+            const title = document.getElementById('title').value;
 
             if (type === 'class') {
                 scheduleData.classes = scheduleData.classes.filter(c => c.id != id);
@@ -1091,6 +2071,9 @@ if ('serviceWorker' in navigator) {
             // Update UI
             renderSchedule();
             hideModal();
+            
+            // Show notification
+            showNotification('Item Deleted', `${type.charAt(0).toUpperCase() + type.slice(1)} "${title}" has been removed`, 'deadline-reminder');
         }
 
         // Calculate days left
@@ -1114,11 +2097,12 @@ if ('serviceWorker' in navigator) {
         // Render schedule grid
         function renderScheduleGrid() {
             scheduleGrid.innerHTML = '';
+            const currentDay = getCurrentDay();
             
             // Add day headers for desktop
             days.forEach(day => {
                 const dayHeader = document.createElement('div');
-                dayHeader.className = 'day-header';
+                dayHeader.className = `day-header ${day.id === currentDay ? 'current-day' : ''}`;
                 dayHeader.textContent = day.name;
                 scheduleGrid.appendChild(dayHeader);
             });
@@ -1168,11 +2152,12 @@ if ('serviceWorker' in navigator) {
         // Render mobile schedule
         function renderMobileSchedule() {
             scheduleGrid.innerHTML = '';
+            const currentDay = getCurrentDay();
             
             days.forEach(day => {
                 // Add day header
                 const mobileDayHeader = document.createElement('div');
-                mobileDayHeader.className = 'mobile-day-header';
+                mobileDayHeader.className = `mobile-day-header ${day.id === currentDay ? 'current-day' : ''}`;
                 mobileDayHeader.textContent = day.name;
                 scheduleGrid.appendChild(mobileDayHeader);
                 
@@ -1245,9 +2230,6 @@ if ('serviceWorker' in navigator) {
                     
                     upcomingEventsContainer.appendChild(eventElement);
                 });
-                
-                // Scroll to bottom to show new items
-                upcomingEventsContainer.scrollTop = upcomingEventsContainer.scrollHeight;
             } else {
                 upcomingEventsContainer.innerHTML = `
                     <div class="empty-state">
@@ -1276,6 +2258,9 @@ if ('serviceWorker' in navigator) {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+            
+            // Show notification
+            showNotification('Data Exported', 'Your schedule data has been exported successfully', 'event-reminder');
         }
 
         // Import data from file
@@ -1290,7 +2275,9 @@ if ('serviceWorker' in navigator) {
                         scheduleData = importedData;
                         localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
                         renderSchedule();
-                        alert('Data imported successfully!');
+                        
+                        // Show notification
+                        showNotification('Data Imported', 'Your schedule data has been imported successfully', 'event-reminder');
                     } else {
                         alert('Invalid backup file format.');
                     }
@@ -1301,9 +2288,188 @@ if ('serviceWorker' in navigator) {
             reader.readAsText(file);
         }
 
+        // Show notification
+        function showNotification(title, message, type = 'event-reminder') {
+            if (!notificationSettings.enableNotifications) return;
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            // Set appropriate icon based on type
+            let icon = '📅';
+            if (type === 'class-reminder') icon = '📚';
+            if (type === 'deadline-reminder') icon = '⏰';
+            
+            notification.innerHTML = `
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                    <div class="notification-time">Just now</div>
+                </div>
+                <button class="notification-close">×</button>
+                <div class="notification-progress"></div>
+            `;
+            
+            notificationContainer.appendChild(notification);
+            
+            // Play sound
+            playNotificationSound();
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.add('show');
+                
+                // Start progress bar animation
+                const progressBar = notification.querySelector('.notification-progress');
+                setTimeout(() => {
+                    progressBar.style.transform = 'scaleX(0)';
+                }, 10);
+            }, 10);
+            
+            // Close button functionality
+            const closeBtn = notification.querySelector('.notification-close');
+            closeBtn.addEventListener('click', () => {
+                closeNotification(notification);
+            });
+            
+            // Auto-close after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    closeNotification(notification);
+                }
+            }, 5000);
+        }
+        
+        // Close notification
+        function closeNotification(notification) {
+            notification.classList.remove('show');
+            notification.classList.add('hide');
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notificationContainer.removeChild(notification);
+                }
+            }, 300);
+        }
+        
+        // Check for upcoming classes and events
+        function checkUpcomingReminders() {
+            const now = new Date();
+            const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+            const currentTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
+            // Check for upcoming classes today
+            if (notificationSettings.enableClassReminders) {
+                const todayClasses = scheduleData.classes.filter(cls => 
+                    cls.day === currentDay
+                );
+                
+                todayClasses.forEach(cls => {
+                    // Parse class time
+                    const classTime = cls.time.split(' - ')[0]; // Get start time
+                    const [time, modifier] = classTime.split(' ');
+                    let [hours, minutes] = time.split(':');
+                    
+                    if (modifier === 'PM' && hours !== '12') {
+                        hours = parseInt(hours) + 12;
+                    }
+                    if (modifier === 'AM' && hours === '12') {
+                        hours = 0;
+                    }
+                    
+                    const classDateTime = new Date();
+                    classDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                    
+                    const timeDiff = classDateTime - now;
+                    const minutesDiff = timeDiff / (1000 * 60);
+                    
+                    // If class is within the reminder time and we haven't notified yet
+                    if (minutesDiff > 0 && minutesDiff <= notificationSettings.classReminderTime) {
+                        // Check if we've already notified for this class today
+                        const notificationKey = `class-${cls.id}-${now.toDateString()}`;
+                        if (!localStorage.getItem(notificationKey)) {
+                            showNotification(
+                                'Upcoming Class', 
+                                `"${cls.title}" starts in ${Math.ceil(minutesDiff)} minutes in ${cls.room || 'your usual location'}`,
+                                'class-reminder'
+                            );
+                            localStorage.setItem(notificationKey, 'true');
+                        }
+                    }
+                });
+            }
+            
+            // Check for upcoming events
+            if (notificationSettings.enableEventReminders) {
+                scheduleData.events.forEach(event => {
+                    const eventDate = new Date(event.date);
+                    const timeDiff = eventDate - now;
+                    const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+                    
+                    // If event is within the reminder time and we haven't notified yet
+                    if (daysDiff > 0 && daysDiff <= notificationSettings.eventReminderTime) {
+                        const notificationKey = `event-${event.id}-${Math.floor(daysDiff)}`;
+                        if (!localStorage.getItem(notificationKey)) {
+                            let message = '';
+                            if (daysDiff <= 1) {
+                                message = `"${event.title}" is tomorrow at ${event.time}`;
+                            } else {
+                                message = `"${event.title}" is in ${Math.ceil(daysDiff)} days`;
+                            }
+                            
+                            showNotification(
+                                'Upcoming Event', 
+                                message,
+                                'deadline-reminder'
+                            );
+                            localStorage.setItem(notificationKey, 'true');
+                        }
+                    }
+                });
+            }
+        }
+
         // Event Listeners
         editToggle.addEventListener('click', toggleEditMode);
         darkModeToggle.addEventListener('click', toggleDarkMode);
+        notificationSettingsBtn.addEventListener('click', showSettingsModal);
+        closeSettingsBtn.addEventListener('click', hideSettingsModal);
+        cancelSettingsBtn.addEventListener('click', hideSettingsModal);
+        saveSettingsBtn.addEventListener('click', saveNotificationSettings);
+        testSoundBtn.addEventListener('click', testNotificationSound);
+        
+        // Mobile menu event listeners
+        hamburgerMenu.addEventListener('click', toggleMobileMenu);
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+        mobileEditToggle.addEventListener('click', () => {
+            toggleEditMode();
+            closeMobileMenu();
+        });
+        mobileImportBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                if (e.target.files.length > 0) {
+                    importData(e.target.files[0]);
+                }
+            };
+            input.click();
+            closeMobileMenu();
+        });
+        mobileExportBtn.addEventListener('click', () => {
+            exportData();
+            closeMobileMenu();
+        });
+        mobileNotificationSettingsBtn.addEventListener('click', () => {
+            showSettingsModal();
+            closeMobileMenu();
+        });
+        mobileDarkModeToggle.addEventListener('click', () => {
+            toggleDarkMode();
+            closeMobileMenu();
+        });
         
         addClassBtn.addEventListener('click', () => {
             if (!isEditMode) return; // Only allow editing in edit mode
@@ -1359,6 +2525,9 @@ if ('serviceWorker' in navigator) {
             if (e.target === confirmModal) {
                 hideConfirmModal();
             }
+            if (e.target === settingsModal) {
+                hideSettingsModal();
+            }
         });
 
         // Handle window resize for responsive design
@@ -1367,6 +2536,10 @@ if ('serviceWorker' in navigator) {
         // Update time every second
         setInterval(updateDateTime, 1000);
         updateDateTime();
+        
+        // Check for reminders every minute
+        setInterval(checkUpcomingReminders, 60000);
+        checkUpcomingReminders(); // Check immediately on load
 
         // Initialize
         updateDarkModeUI();
@@ -1375,5 +2548,3 @@ if ('serviceWorker' in navigator) {
     </script>
 </body>
 </html>
-
-
